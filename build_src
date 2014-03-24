@@ -1,0 +1,77 @@
+#!/bin/bash
+ 
+#Ubuntu Release
+ubuntu_rel="trusty"
+ 
+#PPA to upload to (i.e. ppa:sandyd/nginx-current-pagespeed)
+ppaaddr="ppa:sandyd/nginx-current-pagespeed"
+ 
+#Name
+email="celene@sandydprod.net"
+fullname="Celene"
+ 
+#Find Path
+script_path=$(pwd)
+ 
+#Create version if does not exist
+if [ ! -f "cur_version" ]
+then
+        echo 0 > cur_version
+fi
+ 
+#Get latest version
+ver_dsc=$(wget -qO - http://ftp.us.debian.org/debian/pool/main/n/nginx/ | grep -i "nginx_1.4" | grep -i "\.dsc" | sort -V | tail -1 | sed 's#^.*>\([^<]*\)</a>.*$#\1#' )
+ver=$(sed 's/.dsc//' <<< $ver_dsc)
+ver_cur=$(cat cur_version)
+ 
+#Check if version is current
+if [[ $ver = $ver_cur ]]
+then
+        echo "Current Version:" $ver_cur
+        echo "Version in Debian Repos:" $ver
+        echo "Version is current, no update needed"
+        exit 0
+fi
+ 
+echo "Current Version:" $ver_cur
+echo "Version in Debian Repos:" $ver
+echo "Version out of date, update needed"
+ 
+ver_num=$(awk -F "_" '{print $2}' <<< $ver)
+ 
+#Fetch archives
+echo "==Downloading latest Nginx from Debian=="
+dget -u http://ftp.us.debian.org/debian/pool/main/n/nginx/$ver_dsc
+ 
+#Get folder name
+folder_name=$( echo $ver | awk -F "-" '{ print $1}' | sed s/\_/-/)
+
+#Get nginx pagespeed
+echo "==Downloading ngx_pagespeed=="
+git clone https://github.com/pagespeed/ngx_pagespeed.git $folder_name/debian/modules/ngx_pagespeed
+echo "==Downloading PSOL Libraries=="
+curl https://dl.google.com/dl/page-speed/psol/1.7.30.4.tar.gz > $folder_name/debian/modules/ngx_pagespeed/psol.tar.gz
+ 
+#Get LDAP Auth
+git clone https://github.com/kvspb/nginx-auth-ldap.git $folder_name/debian/modules/ngx_auth_ldap
+ 
+echo "==Adding extra modules to rules=="
+patch -d $folder_name/debian -p0 < patches/ldap_module.patch
+patch -d $folder_name/debian -p0 < patches/ngx_pagespeed.patch
+echo "==Patching for Trusty=="
+patch -d $folder_name/debian -p0 < patches/trusty_dep.patch
+ 
+echo "debian/modules/ngx_pagespeed/psol.tar.gz" >> $folder_name/debian/source/include-binaries
+ 
+echo $ver > cur_version
+ 
+echo "==Updating Debian Changelog=="
+cd $script_path/$folder_name
+DEBEMAIL=$email DEBFULLNAME=$fullname dch --force-distribution --increment --distribution $ubuntu_rel "Backport to Ubuntu"
+DEBEMAIL=$email DEBFULLNAME=$fullname dch --force-distribution --local ~sandydnet --distribution $ubuntu_rel "SandyDNET Rebuild"
+DEBEMAIL=$email DEBFULLNAME=$fullname dch --force-distribution --local ~$ubuntu_rel --distribution $ubuntu_rel "SandyDNET Rebuild"
+ 
+debuild -sa -S
+cd ..
+dput -f $ppaaddr ${ver}ubuntu1~sandydnet1~${ubuntu_rel}1_source.changes
+rm -rf nginx*

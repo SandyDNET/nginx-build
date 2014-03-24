@@ -1,0 +1,21 @@
+--- control.orig	2014-03-06 08:14:15.438136035 -0800
++++ control	2014-03-06 08:14:40.534136034 -0800
+@@ -13,7 +13,7 @@
+                dh-systemd (>= 1.5),
+                dpkg-dev (>= 1.15.5),
+                libexpat-dev,
+-               libgd2-dev | libgd2-noxpm-dev,
++               libgd2-dev | libgd2-noxpm-dev | libgd2-xpm-dev,
+                libgeoip-dev,
+                liblua5.1-dev,
+                libmhash-dev,
+@@ -23,7 +23,8 @@
+                libssl-dev,
+                libxslt1-dev,
+                po-debconf,
+-               zlib1g-dev
++               zlib1g-dev,
++	       libldap2-dev
+ Standards-Version: 3.9.5
+ Homepage: http://nginx.net
+ Vcs-Git: git://anonscm.debian.org/collab-maint/nginx.git

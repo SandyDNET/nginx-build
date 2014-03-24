@@ -1,0 +1,10 @@
+--- rules.orig	2014-03-06 08:07:46.242136032 -0800
++++ rules	2014-03-06 08:08:27.746136035 -0800
+@@ -52,6 +52,7 @@
+ 			--with-http_ssl_module \
+ 			--with-http_stub_status_module \
+ 			--with-http_realip_module \
++			--add-module=$(MODULESDIR)/ngx_auth_ldap \
+ 
+ config.env.%:
+ 	dh_testdir
