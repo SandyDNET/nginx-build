@@ -1,14 +1,14 @@
 #!/bin/bash
  
 #Ubuntu Release
-ubuntu_rel="trusty"
+ubuntu_rel=""
  
 #PPA to upload to (i.e. ppa:sandyd/nginx-current-pagespeed)
-ppaaddr="ppa:sandyd/nginx-current-pagespeed"
+ppaaddr=""
  
 #Name
-email="celene@sandydprod.net"
-fullname="Celene"
+email=""
+fullname=""
  
 #Find Path
 script_path=$(pwd)
